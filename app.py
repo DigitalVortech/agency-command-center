@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import urllib.parse
 import pandas as pd
-import re # New library for cleaning phone numbers
+import re 
 
 # --- 1. CONFIGURATION & DATA ---
 CLIENTS = {
@@ -150,7 +150,27 @@ if selected == "Database":
     st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.markdown('<span class="section-label">CLIENT REGISTRY</span>', unsafe_allow_html=True)
     
-    uploaded_file = st.file_uploader("Import CSV (Name, Service, Phone)", type=["csv"])
+    # --- TEMPLATE GENERATOR ---
+    # Create a sample dataframe
+    sample_df = pd.DataFrame([
+        {"Name": "John Doe", "Service": "House Clean", "Phone": "555-123-4567"},
+        {"Name": "Jane Smith", "Service": "Deep Clean", "Phone": "(509) 555-0199"}
+    ])
+    # Convert to CSV
+    csv_data = sample_df.to_csv(index=False).encode('utf-8')
+    
+    # Download Button
+    st.download_button(
+        label="📄 Download Excel/CSV Template",
+        data=csv_data,
+        file_name="client_template.csv",
+        mime="text/csv",
+        help="Click to download a blank file to fill out."
+    )
+    st.markdown("---")
+    
+    # --- UPLOADER ---
+    uploaded_file = st.file_uploader("Import Completed CSV", type=["csv"])
     if uploaded_file:
         try:
             df = pd.read_csv(uploaded_file)
@@ -162,7 +182,7 @@ if selected == "Database":
                 service = str(row.get('Service', 'Cleaning'))
                 raw_phone = str(row.get('Phone', ''))
                 
-                # Clean Phone Number (Remove non-digits)
+                # Clean Phone Number
                 phone_digits = re.sub(r'\D', '', raw_phone)
                 
                 # Generate Links
@@ -170,8 +190,11 @@ if selected == "Database":
                 msg = (f"Hi {name}! Thanks for using {selected_client_name} for your {service}. Review us? {link}")
                 encoded_msg = urllib.parse.quote(msg)
                 
-                # If phone exists, add it to the link. If not, just open empty SMS.
-                sms_href = f"sms:{phone_digits}?&body={encoded_msg}" if phone_digits else f"sms:?&body={encoded_msg}"
+                # Decide link type (with or without phone number)
+                if phone_digits:
+                    sms_href = f"sms:{phone_digits}?&body={encoded_msg}"
+                else:
+                    sms_href = f"sms:?&body={encoded_msg}"
                 
                 st.markdown(f"""
                 <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom:1px solid #F1F5F9;">
@@ -188,7 +211,7 @@ if selected == "Database":
         except Exception as e:
              st.error(f"CSV Error: {e}")
     else:
-        st.info("Upload CSV to enable bulk actions.")
+        st.info("Upload your CSV file to start texting.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- PAGE: RANKINGS ---
@@ -221,7 +244,13 @@ if selected == "Leads":
                 magic_suffix = "&filters=eyJzb3J0aW5nIjoie1widmFsdWVcIjpcImNocm9ub19kZXNjZW5kaW5nXCJ9In0%3D"
                 encoded_kw = urllib.parse.quote(full_search)
                 url = f"https://www.facebook.com/groups/{group_id}/search/?q={encoded_kw}{magic_suffix}"
-                if i == 0: with c1: st.link_button(f"Find '{kw}'", url, use_container_width=True)
-                if i == 1: with c2: st.link_button(f"Find '{kw}'", url, use_container_width=True)
+                
+                # FIXED INDENTATION LOGIC HERE
+                if i == 0: 
+                    with c1: 
+                        st.link_button(f"Find '{kw}'", url, use_container_width=True)
+                if i == 1: 
+                    with c2: 
+                        st.link_button(f"Find '{kw}'", url, use_container_width=True)
             st.write("")
     st.markdown('</div>', unsafe_allow_html=True)
