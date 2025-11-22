@@ -53,12 +53,11 @@ with st.sidebar:
 data = CLIENTS[selected_client_name]
 
 # --- 4. TOP NAVIGATION BAR (VISIBLE ON MOBILE) ---
-# I moved this OUT of the sidebar so it sits at the top of the phone screen
 selected = option_menu(
-    menu_title=None, # Hide title to save space
-    options=["Review Gen", "Database", "Rankings", "Leads"], # Shortened names for mobile
+    menu_title=None, 
+    options=["Review Gen", "Database", "Rankings", "Leads"], 
     icons=["star-fill", "table", "geo-alt-fill", "search"], 
-    orientation="horizontal", # <--- THIS MAKES IT HORIZONTAL
+    orientation="horizontal",
     styles={
         "container": {"padding": "0!important", "background-color": "#FFFFFF"},
         "icon": {"color": "#0066cc", "font-size": "14px"}, 
@@ -106,16 +105,13 @@ if selected == "Database":
             st.success(f"Loaded {len(df)} clients.")
             st.markdown("---")
             for index, row in df.iterrows():
-                # Mobile Layout: Name on top, button below
                 name = row.get('Name', 'Client')
                 service = row.get('Service', 'Cleaning')
                 
-                # Generate Link
                 link = data["review_link"]
                 msg = (f"Hi {name}! Thanks for using {selected_client_name}. Review us? {link}")
                 encoded = urllib.parse.quote(msg)
                 
-                # Simple Card for each person
                 st.markdown(f"""
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <div>
@@ -142,7 +138,7 @@ if selected == "Rankings":
     target_keyword = st.text_input("Keyword", value=data["services"][0])
     
     st.write("Check ranking in:")
-    cols = st.columns(2) # 2 columns is better for mobile than 3
+    cols = st.columns(2)
     for index, (name, location_query) in enumerate(data["locations"].items()):
         query = f"{target_keyword} in {location_query}"
         encoded_query = urllib.parse.quote(query)
@@ -166,7 +162,12 @@ if selected == "Leads":
                 encoded_kw = urllib.parse.quote(full_search)
                 url = f"https://www.facebook.com/groups/{group_id}/search/?q={encoded_kw}{magic_suffix}"
                 
-                if i == 0: with c1: st.link_button(f"Find '{kw}'", url, use_container_width=True)
-                if i == 1: with c2: st.link_button(f"Find '{kw}'", url, use_container_width=True)
+                # FIXED: Unstacked lines
+                if i == 0: 
+                    with c1: 
+                        st.link_button(f"Find '{kw}'", url, use_container_width=True)
+                if i == 1: 
+                    with c2: 
+                        st.link_button(f"Find '{kw}'", url, use_container_width=True)
             st.write("")
     st.markdown('</div>', unsafe_allow_html=True)
