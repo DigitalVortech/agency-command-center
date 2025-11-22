@@ -7,7 +7,7 @@ CLIENTS = {
         "review_link": "https://g.page/r/YOUR_PRIME_SHINE_LINK/review",
         "services": ["House Clean", "Move-out Clean", "Deep Clean"],
         "competitors": {
-            "Prime Shine": 12, 
+            "Prime Shine": 16, 
             "Maids of Movher": 151, 
             "Live Clean Today": 70
         },
@@ -125,4 +125,5 @@ with tab4:
                 with cols[i]:
                     st.link_button(f"Find '{kw}'", search_url)
     else:
+
         st.warning("No Facebook Groups added for this client yet.")
