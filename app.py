@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_option_menu import option_menu # NEW LIBRARY
 import urllib.parse
 
 # --- 1. CONFIGURATION & DATA ---
@@ -17,99 +18,100 @@ CLIENTS = {
              "Mead Community": "987654321"
         }
     }
-    # Add more clients here...
 }
 
 # --- 2. APP SETUP & CUSTOM CSS ---
-st.set_page_config(page_title="Growth Dashboard", page_icon="✨", layout="centered")
+st.set_page_config(page_title="Growth Dashboard", page_icon="⚡", layout="wide")
 
-# This is the Magic CSS Block
+# Custom CSS for a "SaaS Platform" look
 st.markdown("""
     <style>
-        /* Import Google Font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
-            background-color: #F5F7F9; /* Light Grey Background */
             color: #1E293B;
         }
-
-        /* HIDE Streamlit Branding */
+        
+        /* Remove Streamlit branding */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
-
-        /* CARD STYLE: White box with shadow */
-        .stTabs [data-baseweb="tab-panel"] {
+        
+        /* Card Styling */
+        .metric-card {
             background-color: #FFFFFF;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             border: 1px solid #E2E8F0;
+            margin-bottom: 20px;
         }
-
-        /* BUTTONS: Modern Gradient */
+        
+        /* Custom Button Styling */
         .stButton button {
-            background: linear-gradient(90deg, #00C6FF 0%, #0072FF 100%);
+            background-color: #0F172A;
             color: white;
-            border: none;
             border-radius: 8px;
             font-weight: 600;
-            padding: 0.5rem 1rem;
-            width: 100%;
+            border: none;
+            padding: 10px 20px;
+            transition: all 0.2s;
         }
         .stButton button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        /* LINK BUTTONS (Facebook/Google) */
-        a {
-            text-decoration: none !important;
-        }
-
-        /* HEADERS */
-        h1, h2, h3 {
-            color: #0F172A;
-            font-weight: 700;
+            background-color: #334155;
+            transform: translateY(-2px);
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (Client Selector) ---
+# --- 3. SIDEBAR NAVIGATION ---
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/2920/2920323.png", width=50) # Generic Rocket Icon
-    st.header("Agency Controls")
-    selected_client_name = st.selectbox("Active Client", list(CLIENTS.keys()))
-    st.info(f"Viewing data for: **{selected_client_name}**")
+    # App Logo / Title
+    st.markdown("### ⚡ AgencyOS")
+    
+    # Client Selector
+    selected_client_name = st.selectbox("Select Client", list(CLIENTS.keys()))
     st.markdown("---")
-    st.caption("v2.0 | Automated Growth System")
+    
+    # PRO NAVIGATION MENU (No more emojis)
+    selected = option_menu(
+        menu_title="Main Menu",
+        options=["Review Generator", "Rank Checker", "Competitors", "Lead Scavenger"],
+        icons=["star-fill", "geo-alt-fill", "trophy-fill", "search"], # BOOTSTRAP ICONS
+        menu_icon="cast",
+        default_index=0,
+        styles={
+            "container": {"padding": "0!important", "background-color": "#f8f9fa"},
+            "icon": {"color": "#0066cc", "font-size": "16px"}, 
+            "nav-link": {"font-size": "14px", "text-align": "left", "margin":"0px", "--hover-color": "#eef2ff"},
+            "nav-link-selected": {"background-color": "#0F172A"},
+        }
+    )
+    
+    st.markdown("---")
+    st.caption("v2.1 | Enterprise Edition")
 
 data = CLIENTS[selected_client_name]
 
-# --- 4. MAIN INTERFACE ---
-# Modern Header
-st.markdown(f"""
-    <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="margin:0;">{selected_client_name}</h1>
-        <p style="color: #64748B; font-size: 14px;">Growth Command Center</p>
-    </div>
-""", unsafe_allow_html=True)
+# --- 4. MAIN CONTENT AREA ---
 
-# Tabs with Icons
-tab1, tab2, tab3, tab4 = st.tabs(["⭐ Reviews", "📍 Rankings", "🏆 Market", "🕵️ Leads"])
+# HEADER
+st.markdown(f"## {selected_client_name}")
+st.markdown(f"**Dashboard** > *{selected}*")
+st.write("") # Spacer
 
-# --- TAB 1: REVIEWS ---
-with tab1:
-    st.markdown("### 📝 Request a Review")
-    st.caption("Send this immediately after a job closes.")
+# --- PAGE 1: REVIEW GENERATOR ---
+if selected == "Review Generator":
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.subheader("Request a Review")
+    st.info("💡 Pro Tip: Send this while you are still physically at the job site.")
     
     col1, col2 = st.columns(2)
     with col1:
-        customer_name = st.text_input("Customer Name", placeholder="e.g. Sarah")
+        customer_name = st.text_input("Customer Name", placeholder="Jane Doe")
     with col2:
-        service_type = st.selectbox("Service", data["services"])
+        service_type = st.selectbox("Service Type", data["services"])
 
     if customer_name:
         link = data["review_link"]
@@ -118,40 +120,26 @@ with tab1:
             f"We are trying to grow our local business and a quick 5-star rating helps us a ton. "
             f"Link: {link}"
         )
-        
-        # Display the script in a nice grey box
-        st.success("Script Generated:")
         st.code(message_text, language=None)
-        
         encoded_msg = urllib.parse.quote(message_text)
         
-        # Custom HTML Button for SMS
+        # Professional "Action" Button
         st.markdown(f'''
-            <a href="sms:?&body={encoded_msg}" target="_blank">
-                <div style="
-                    background-color: #22C55E;
-                    color: white;
-                    padding: 12px;
-                    border-radius: 8px;
-                    text-align: center;
-                    font-weight: bold;
-                    margin-top: 10px;
-                    cursor: pointer;
-                    box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);
-                ">
-                    📱 Open Text Message App
+            <a href="sms:?&body={encoded_msg}" target="_blank" style="text-decoration:none;">
+                <div style="background-color:#22C55E; color:white; padding:15px; border-radius:8px; text-align:center; font-weight:bold; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.3);">
+                    📨 Send Text Message Now
                 </div>
             </a>
         ''', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- TAB 2: RANKINGS ---
-with tab2:
-    st.markdown("### 📍 Visual Rank Checker")
-    st.caption("See what your customers see in different neighborhoods.")
+# --- PAGE 2: RANK CHECKER ---
+if selected == "Rank Checker":
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.subheader("Live Rank Verification")
     
-    target_keyword = st.text_input("Search Term", value=data["services"][0])
-    
-    st.write("") # Spacer
+    target_keyword = st.text_input("Search Keyword", value=data["services"][0])
+    st.write("Click a location to simulate a customer search:")
     
     cols = st.columns(3)
     for index, (name, location_query) in enumerate(data["locations"].items()):
@@ -160,54 +148,50 @@ with tab2:
         search_url = f"https://www.google.com/search?q={encoded_query}"
         
         with cols[index % 3]:
-            # Using Streamlit's link_button but styled via CSS above
-            st.link_button(f"🔍 Check {name}", search_url)
+            st.link_button(f"🔎 {name}", search_url, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- TAB 3: MARKET SHARE ---
-with tab3:
-    st.markdown("### 🏆 Competitor Scoreboard")
+# --- PAGE 3: COMPETITORS ---
+if selected == "Competitors":
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.subheader("Market Share Analysis")
     
     my_name = list(data["competitors"].keys())[0]
     my_reviews = data["competitors"][my_name]
     leader_reviews = max(data["competitors"].values())
     gap = leader_reviews - my_reviews
     
-    # 3-Column Metric Display
     m1, m2, m3 = st.columns(3)
-    m1.metric("Our Reviews", f"{my_reviews}", delta="Manual Update")
+    m1.metric("Your Reviews", f"{my_reviews}")
     m2.metric("Market Leader", f"{leader_reviews}")
-    m3.metric("Gap to Close", f"{gap}", delta_color="inverse")
+    m3.metric("Gap to Leader", f"{gap}", delta_color="inverse")
     
     st.bar_chart(data["competitors"])
-    
-    if gap > 0:
-        st.warning(f"🚀 We need **{gap}** more reviews to catch the leader.")
-    else:
-        st.balloons()
-        st.success("🎉 You are the Market Leader!")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- TAB 4: LEADS ---
-with tab4:
-    st.markdown("### 🕵️ Social Scavenger")
-    st.caption("Find intent-based leads in local groups instantly.")
+# --- PAGE 4: LEAD SCAVENGER ---
+if selected == "Lead Scavenger":
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.subheader("Social Listening Tool")
     
     if "fb_groups" in data:
         keywords = ["recommend", "looking for", "needed"]
-        
         for group_name, group_id in data["fb_groups"].items():
-            st.markdown(f"#### 👥 {group_name}")
+            st.markdown(f"**{group_name}**")
             
+            # Grid of nice pill-shaped buttons
             c1, c2, c3 = st.columns(3)
-            # Create a button for each keyword
             for i, kw in enumerate(keywords):
                 full_search = f"{data['services'][0]} {kw}"
                 magic_suffix = "&filters=eyJzb3J0aW5nIjoie1widmFsdWVcIjpcImNocm9ub19kZXNjZW5kaW5nXCJ9In0%3D"
                 encoded_kw = urllib.parse.quote(full_search)
                 url = f"https://www.facebook.com/groups/{group_id}/search/?q={encoded_kw}{magic_suffix}"
                 
-                # Place buttons in columns
-                if i == 0: with c1: st.link_button(f"Find '{kw}'", url)
-                if i == 1: with c2: st.link_button(f"Find '{kw}'", url)
-                if i == 2: with c3: st.link_button(f"Find '{kw}'", url)
-            
-            st.markdown("---")
+                if i == 0:
+                    with c1: st.link_button(f"Find '{kw}'", url, use_container_width=True)
+                if i == 1:
+                    with c2: st.link_button(f"Find '{kw}'", url, use_container_width=True)
+                if i == 2:
+                    with c3: st.link_button(f"Find '{kw}'", url, use_container_width=True)
+            st.write("")
+    st.markdown('</div>', unsafe_allow_html=True)
