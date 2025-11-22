@@ -81,6 +81,12 @@ st.markdown("""
             width: 100%; background-color: #0F172A; color: white; border: none;
             padding: 12px; font-weight: 600; font-size: 13px; border-radius: 6px;
         }
+        
+        /* Dropdown Styling */
+        div[data-baseweb="select"] > div {
+            border-radius: 6px;
+            border-color: #E2E8F0;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -121,10 +127,10 @@ selected = option_menu(
     }
 )
 
-# --- PAGE: GROWTH ---
+# --- PAGE: GROWTH (Manual Entry) ---
 if selected == "Growth":
     st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.markdown('<span class="section-label">QUICK ACTIONS</span>', unsafe_allow_html=True)
+    st.markdown('<span class="section-label">MANUAL ENTRY</span>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1: customer_name = st.text_input("Customer Name", placeholder="e.g. Mike")
@@ -145,73 +151,72 @@ if selected == "Growth":
         ''', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- PAGE: DATABASE ---
+# --- PAGE: DATABASE (The Picker) ---
 if selected == "Database":
     st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.markdown('<span class="section-label">CLIENT REGISTRY</span>', unsafe_allow_html=True)
     
-    # --- TEMPLATE GENERATOR ---
-    # Create a sample dataframe
-    sample_df = pd.DataFrame([
-        {"Name": "John Doe", "Service": "House Clean", "Phone": "555-123-4567"},
-        {"Name": "Jane Smith", "Service": "Deep Clean", "Phone": "(509) 555-0199"}
-    ])
-    # Convert to CSV
+    # 1. TEMPLATE DOWNLOAD
+    sample_df = pd.DataFrame([{"Name": "John Doe", "Service": "House Clean", "Phone": "555-123-4567"}])
     csv_data = sample_df.to_csv(index=False).encode('utf-8')
+    st.download_button(label="📄 Download CSV Template", data=csv_data, file_name="template.csv", mime="text/csv")
     
-    # Download Button
-    st.download_button(
-        label="📄 Download Excel/CSV Template",
-        data=csv_data,
-        file_name="client_template.csv",
-        mime="text/csv",
-        help="Click to download a blank file to fill out."
-    )
     st.markdown("---")
     
-    # --- UPLOADER ---
-    uploaded_file = st.file_uploader("Import Completed CSV", type=["csv"])
+    # 2. FILE UPLOAD
+    uploaded_file = st.file_uploader("Import CSV File", type=["csv"])
+    
     if uploaded_file:
         try:
             df = pd.read_csv(uploaded_file)
-            st.success(f"Loaded {len(df)} contacts.")
+            st.success(f"✓ {len(df)} Contacts Loaded")
             
-            for _, row in df.iterrows():
-                # Get Data
-                name = str(row.get('Name', 'Client'))
-                service = str(row.get('Service', 'Cleaning'))
-                raw_phone = str(row.get('Phone', ''))
+            # 3. THE CLIENT PICKER (Dropdown)
+            # Create a list of names for the dropdown
+            client_list = df['Name'].tolist()
+            selected_person = st.selectbox("Select Client to Text:", client_list)
+            
+            if selected_person:
+                # Find the row for the selected person
+                person_data = df[df['Name'] == selected_person].iloc[0]
                 
-                # Clean Phone Number
-                phone_digits = re.sub(r'\D', '', raw_phone)
+                # Extract Data
+                p_service = str(person_data.get('Service', 'Service'))
+                p_phone = str(person_data.get('Phone', ''))
                 
-                # Generate Links
+                # Clean Phone
+                phone_digits = re.sub(r'\D', '', p_phone)
+                
+                # Generate Link
                 link = data["review_link"]
-                msg = (f"Hi {name}! Thanks for using {selected_client_name} for your {service}. Review us? {link}")
+                msg = (f"Hi {selected_person}! Thanks for using {selected_client_name} for your {p_service}. Review us? {link}")
                 encoded_msg = urllib.parse.quote(msg)
                 
-                # Decide link type (with or without phone number)
+                # Logic for SMS link (Android/iOS compatibility)
                 if phone_digits:
                     sms_href = f"sms:{phone_digits}?&body={encoded_msg}"
                 else:
                     sms_href = f"sms:?&body={encoded_msg}"
                 
+                # 4. BIG ACTION CARD
                 st.markdown(f"""
-                <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom:1px solid #F1F5F9;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px; color:#0F172A;">{name}</div>
-                        <div style="font-size:11px; color:#64748B;">{service}</div>
-                    </div>
-                    <a href="{sms_href}" target="_blank">
-                        <button style="background:#F8FAFC; color:#0F172A; border:1px solid #E2E8F0; padding:6px 12px; border-radius:4px; font-weight:600; font-size:11px; cursor:pointer;">
-                           Text {name}
-                        </button>
+                <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:15px; margin-top:15px;">
+                    <div style="font-size:12px; color:#64748B; font-weight:600; margin-bottom:5px;">READY TO SEND</div>
+                    <div style="font-size:16px; font-weight:700; color:#0F172A; margin-bottom:2px;">{selected_person}</div>
+                    <div style="font-size:13px; color:#475569; margin-bottom:15px;">{p_phone if p_phone else 'No phone number found'}</div>
+                    
+                    <a href="{sms_href}" target="_blank" style="text-decoration:none;">
+                        <div style="background: #2563EB; color:white; padding:12px; border-radius:6px; text-align:center; font-weight:600; font-size:14px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
+                            📨 Send Text Now
+                        </div>
                     </a>
-                </div>""", unsafe_allow_html=True)
+                </div>
+                """, unsafe_allow_html=True)
+
         except Exception as e:
              st.error(f"CSV Error: {e}")
     else:
-        st.info("Upload your CSV file to start texting.")
+        st.info("Upload your CSV file to unlock the client picker.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- PAGE: RANKINGS ---
@@ -245,7 +250,6 @@ if selected == "Leads":
                 encoded_kw = urllib.parse.quote(full_search)
                 url = f"https://www.facebook.com/groups/{group_id}/search/?q={encoded_kw}{magic_suffix}"
                 
-                # FIXED INDENTATION LOGIC HERE
                 if i == 0: 
                     with c1: 
                         st.link_button(f"Find '{kw}'", url, use_container_width=True)
